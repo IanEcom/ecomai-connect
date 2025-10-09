@@ -652,9 +652,26 @@ export default function Admin() {
   );
 }
 
+function decodeShopFromHost(hostParam: string | string[] | undefined): string | null {
+  if (!hostParam) return null;
+  const raw = Array.isArray(hostParam) ? hostParam[0] : hostParam;
+  if (!raw) return null;
+  try {
+    // host = base64(shop.admin...) -> we willen domein
+    const decoded = Buffer.from(raw, "base64").toString("utf8");
+    const match = decoded.match(/^[^/]+\/store\/([a-z0-9-]+)\.myshopify\.com/i);
+    return match ? `${match[1]}.myshopify.com` : null;
+  } catch {
+    return null;
+  }
+}
+
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const shopParam = context.query.shop;
-  const shop = Array.isArray(shopParam) ? shopParam[0] : shopParam;
+  let shop = Array.isArray(shopParam) ? shopParam[0] : shopParam;
+  if (!shop) {
+    shop = decodeShopFromHost(context.query.host);
+  }
   const hasToken = Boolean(context.req.cookies?.tok);
 
   let hasStoredInstall = false;

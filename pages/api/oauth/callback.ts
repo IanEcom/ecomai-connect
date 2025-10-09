@@ -66,6 +66,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
   } catch {}
 
-  const hostQ = hostValue ? `?host=${encodeURIComponent(String(hostValue))}` : "";
-  res.redirect(`/admin${hostQ}`);
+  const params = new URLSearchParams({ shop: shopDomain });
+  if (hostValue) {
+    params.set("host", String(hostValue));
+  }
+
+  res.redirect(`/admin?${params.toString()}`);
 }
