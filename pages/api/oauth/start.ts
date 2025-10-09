@@ -6,7 +6,10 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   const scopes = process.env.SCOPES!;
   const redirectUri = `${process.env.APP_URL}/api/oauth/callback`;
   const state = randomUUID();
-  res.setHeader("Set-Cookie", `shopifyState=${state}; Path=/; HttpOnly; SameSite=Lax; Secure`);
+  res.setHeader(
+    "Set-Cookie",
+    `shopifyState=${state}; Path=/; HttpOnly; SameSite=None; Secure`
+  );
   const url =
     `https://${shop}/admin/oauth/authorize` +
     `?client_id=${process.env.SHOPIFY_API_KEY}` +
