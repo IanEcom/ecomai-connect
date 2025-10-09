@@ -670,7 +670,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const shopParam = context.query.shop;
   let shop = Array.isArray(shopParam) ? shopParam[0] : shopParam;
   if (!shop) {
-    shop = decodeShopFromHost(context.query.host);
+    shop = decodeShopFromHost(context.query.host) ?? undefined;
   }
   const hasToken = Boolean(context.req.cookies?.tok);
 
