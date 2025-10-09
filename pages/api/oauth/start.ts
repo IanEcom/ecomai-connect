@@ -10,6 +10,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     "Set-Cookie",
     `shopifyState=${state}; Path=/; HttpOnly; SameSite=None; Secure`
   );
+  console.info("[oauth] start redirect", { shop, redirectUri });
   const url =
     `https://${shop}/admin/oauth/authorize` +
     `?client_id=${process.env.SHOPIFY_API_KEY}` +

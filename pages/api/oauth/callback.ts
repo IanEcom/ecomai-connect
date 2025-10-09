@@ -46,6 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       accessToken,
       scopes,
     });
+    console.info("[supabase] shop installation saved", { shopDomain });
   } catch (error) {
     console.error("[supabase] Kon shop-installatie niet opslaan", error);
     return res.status(500).send("Kon installatie niet opslaan");
