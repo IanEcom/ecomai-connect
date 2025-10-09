@@ -1,3 +1,4 @@
+import type { GetServerSideProps } from "next";
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { CloudAlert, CloudCheck, CloudCog } from "lucide-react";
@@ -649,3 +650,20 @@ export default function Admin() {
     </s-page>
   );
 }
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const shopParam = context.query.shop;
+  const shop = Array.isArray(shopParam) ? shopParam[0] : shopParam;
+  const hasToken = Boolean(context.req.cookies?.tok);
+
+  if (shop && !hasToken) {
+    return {
+      redirect: {
+        destination: `/api/oauth/start?shop=${encodeURIComponent(shop)}`,
+        permanent: false,
+      },
+    };
+  }
+
+  return { props: {} };
+};
