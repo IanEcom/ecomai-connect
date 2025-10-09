@@ -8,11 +8,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const hmacHeader = req.headers["x-shopify-hmac-sha256"] as string | undefined;
   if (!hmacHeader) return res.status(401).end();
 
+  const webhookSecret =
+    process.env.SHOPIFY_WEBHOOK_SECRET ||
+    process.env.CONNECT_WEBHOOK_SECRET ||
+    process.env.SHOPIFY_API_SECRET;
+  if (!webhookSecret) {
+    console.error("[connect] SHOPIFY_WEBHOOK_SECRET/CONNECT_WEBHOOK_SECRET not configured");
+    return res.status(500).end();
+  }
+
   const chunks: Uint8Array[] = [];
   for await (const c of req) chunks.push(c);
   const buf = Buffer.concat(chunks);
 
-  const digest = createHmac("sha256", process.env.SHOPIFY_API_SECRET!).update(buf).digest("base64");
+  const digest = createHmac("sha256", webhookSecret).update(buf).digest("base64");
   const received = Buffer.from(hmacHeader, "base64");
   const expected = Buffer.from(digest, "base64");
   if (

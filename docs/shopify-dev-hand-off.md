@@ -23,7 +23,7 @@ Body (JSON): { "shop_domain": "my-store.myshopify.com", "access_token": "shpat_.
 
 ### Belangrijke details
 - **HMAC:** hex- of base64-string van de SHA256-HMAC over de ruwe body.
-- **Secrets:** `CONNECT_WEBHOOK_SECRET` moet identiek zijn aan de waarde bij Ecomai.
+- **Secrets:** `SHOPIFY_WEBHOOK_SECRET` (zelfde waarde als `CONNECT_WEBHOOK_SECRET`) wordt gebruikt om webhooks te signeren én te valideren.
 - **scopes:** array (of comma-separated string) met alle toegekende scopes.
 - **Tokens:** stuur de plain token; Ecomai versleutelt deze server-side.
 - **Retries:** stuur bij errors opnieuw (idempotent upsert).
@@ -50,4 +50,4 @@ Body (JSON): { "shop_domain": "my-store.myshopify.com", "access_token": "shpat_.
 ---
 
 _Onzekerheden_
-- `CONNECT_WEBHOOK_SECRET` in `.env.local` gebruikt nog een placeholder; stem het gedeelde secret af met het Ecomai-team.
+- `SHOPIFY_WEBHOOK_SECRET` / `CONNECT_WEBHOOK_SECRET` in `.env.local` gebruikt nog een placeholder; stem het gedeelde secret af met het Ecomai-team.

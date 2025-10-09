@@ -66,6 +66,44 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
   } catch {}
 
+  const registerWebhooksUrl = process.env.CONNECT_REGISTER_WEBHOOKS_URL;
+  if (registerWebhooksUrl) {
+    try {
+      const webhookSecret =
+        process.env.SHOPIFY_WEBHOOK_SECRET ||
+        process.env.CONNECT_WEBHOOK_SECRET ||
+        process.env.SHOPIFY_API_SECRET;
+      const payload: Record<string, unknown> = { storeDomain: shopDomain };
+      if (webhookSecret) payload.webhookSecret = webhookSecret;
+
+      await fetch(registerWebhooksUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    } catch (error) {
+      console.error("[oauth] registerWebhooks call failed", error);
+    }
+  } else {
+    console.warn("[oauth] CONNECT_REGISTER_WEBHOOKS_URL not set, skipping webhook registration");
+  }
+
+  const syncPipelineBase = process.env.ECOMAI_CONNECT_BASE;
+  if (syncPipelineBase) {
+    try {
+      const syncUrl = new URL("/api/syncPipeline", syncPipelineBase).toString();
+      await fetch(syncUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ shopDomain }),
+      });
+    } catch (error) {
+      console.error("[oauth] Initial syncPipeline trigger failed", error);
+    }
+  } else {
+    console.warn("[oauth] ECOMAI_CONNECT_BASE not set, skipping syncPipeline trigger");
+  }
+
   const params = new URLSearchParams({ shop: shopDomain });
   if (hostValue) {
     params.set("host", String(hostValue));
