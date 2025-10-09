@@ -4,6 +4,7 @@ import type { FormEvent } from "react";
 import { CloudAlert, CloudCheck, CloudCog } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Logo from "../logo.svg";
+import { fetchExistingShop } from "../lib/supabase-admin";
 
 type ConnectionStatus = "connected" | "not_connected" | "error";
 
@@ -656,14 +657,32 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const shop = Array.isArray(shopParam) ? shopParam[0] : shopParam;
   const hasToken = Boolean(context.req.cookies?.tok);
 
+  let hasStoredInstall = false;
+  if (shop) {
+    try {
+      const existing = await fetchExistingShop(shop);
+      hasStoredInstall = Boolean(existing);
+    } catch (error) {
+      console.error("[admin] kon Supabase-installatie niet ophalen", error);
+      hasStoredInstall = false;
+    }
+  }
+
   console.info("[admin] gssp", {
     shop,
     hasToken,
+    hasStoredInstall,
     host: context.query.host ?? null,
     cookies: Object.keys(context.req.cookies ?? {}),
   });
 
-  if (shop && !hasToken) {
+  if (shop && (!hasToken || !hasStoredInstall)) {
+    // verwijder potentieel stale token-cookie
+    context.res.setHeader("Set-Cookie", [
+      `tok=; Path=/; HttpOnly; SameSite=None; Secure; Max-Age=0`,
+      `shop=; Path=/; HttpOnly; SameSite=None; Secure; Max-Age=0`,
+    ]);
+
     return {
       redirect: {
         destination: `/api/oauth/start?shop=${encodeURIComponent(shop)}`,

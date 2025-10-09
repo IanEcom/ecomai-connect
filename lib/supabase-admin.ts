@@ -121,7 +121,7 @@ type ExistingShopRecord = {
   token_created_at: string | null;
 };
 
-async function fetchExistingShop(
+export async function fetchExistingShop(
   shopDomain: string,
 ): Promise<ExistingShopRecord | null> {
   const response = await supabaseFetch(
