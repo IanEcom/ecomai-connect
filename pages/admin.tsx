@@ -656,6 +656,13 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const shop = Array.isArray(shopParam) ? shopParam[0] : shopParam;
   const hasToken = Boolean(context.req.cookies?.tok);
 
+  console.info("[admin] gssp", {
+    shop,
+    hasToken,
+    host: context.query.host ?? null,
+    cookies: Object.keys(context.req.cookies ?? {}),
+  });
+
   if (shop && !hasToken) {
     return {
       redirect: {
