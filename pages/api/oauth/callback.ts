@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { createHmac, timingSafeEqual } from "crypto";
-import { pushInstallationUpdate } from "../../../lib/ecomai-connect";
 import { saveShopInstallation } from "../../../lib/supabase-admin";
 
 function verifyHmac(query: Record<string, any>) {
@@ -65,17 +64,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       body: JSON.stringify({ webhook:{ topic:"app/uninstalled", address:`${process.env.APP_URL}/api/webhooks/app-uninstalled`, format:"json" }})
     });
   } catch {}
-
-  try {
-    await pushInstallationUpdate({
-      shopDomain: shopDomain,
-      accessToken: accessToken,
-      scopes,
-      status: "installed",
-    });
-  } catch (error) {
-    console.error("[connect] Installatie push mislukt", error);
-  }
 
   const hostQ = hostValue ? `?host=${encodeURIComponent(String(hostValue))}` : "";
   res.redirect(`/admin${hostQ}`);

@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { createHmac, timingSafeEqual } from "crypto";
-import { pushInstallationUpdate } from "../../../lib/ecomai-connect";
 import { markShopAsUninstalled } from "../../../lib/supabase-admin";
 
 export const config = { api: { bodyParser: false } };
@@ -33,17 +32,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await markShopAsUninstalled(shop);
   } catch (error) {
     console.error("[supabase] Markeren van uninstall in Supabase mislukt", error);
-  }
-
-  try {
-    await pushInstallationUpdate({
-      shopDomain: shop,
-      accessToken: "",
-      scopes: [],
-      status: "uninstalled",
-    });
-  } catch (error) {
-    console.error("[connect] Push na app/uninstalled mislukt", error);
   }
 
   res.status(200).end();
