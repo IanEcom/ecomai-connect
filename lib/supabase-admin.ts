@@ -74,8 +74,8 @@ function encryptAccessToken(token: string, key: Buffer): Buffer {
   return Buffer.concat([iv, authTag, ciphertext]);
 }
 
-function encodeBinaryPayload(buffer: Buffer): string {
-  return buffer.toString("base64"); // PostgREST expects base64 for bytea
+function toByteaLiteral(buffer: Buffer): string {
+  return "\\" + "x" + buffer.toString("hex");
 }
 
 type SupabaseHeaders = HeadersInit & Record<string, string>;
@@ -177,7 +177,7 @@ export async function saveShopInstallation({
     is_active: true,
     deleted_at: null,
     token_updated_at: nowIso,
-    access_token: encodeBinaryPayload(encrypted),
+    access_token: toByteaLiteral(encrypted),
   };
 
   if (!existing) {
