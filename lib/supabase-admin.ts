@@ -152,7 +152,7 @@ export async function saveShopInstallation({
   const existing = await fetchExistingShop(shopDomain);
   const nowIso = new Date().toISOString();
 
-  const record: Record<string, unknown> = {
+  const baseRecord: Record<string, unknown> = {
     shop_domain: shopDomain,
     access_scopes: scopes,
     is_active: true,
@@ -161,15 +161,32 @@ export async function saveShopInstallation({
     access_token: encodeBinaryPayload(encrypted),
   };
 
-  if (!existing || !existing.token_created_at) {
-    record.token_created_at = nowIso;
+  if (!existing) {
+    const insertRecord = {
+      ...baseRecord,
+      token_created_at: nowIso,
+    };
+
+    await supabaseFetch("/rest/v1/shops", {
+      method: "POST",
+      headers: { Prefer: "return=minimal" },
+      body: JSON.stringify(insertRecord),
+    });
+    return;
   }
 
-  await supabaseFetch("/rest/v1/shops?on_conflict=shop_domain", {
-    method: "POST",
-    headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
-    body: JSON.stringify(record),
-  });
+  if (!existing.token_created_at) {
+    baseRecord.token_created_at = nowIso;
+  }
+
+  await supabaseFetch(
+    `/rest/v1/shops?shop_domain=eq.${encodeURIComponent(shopDomain)}`,
+    {
+      method: "PATCH",
+      headers: { Prefer: "return=minimal" },
+      body: JSON.stringify(baseRecord),
+    },
+  );
 }
 
 export async function markShopAsUninstalled(shopDomain: string): Promise<void> {
