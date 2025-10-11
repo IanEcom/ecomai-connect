@@ -119,13 +119,17 @@ async function supabaseFetch(path: string, init: RequestInit): Promise<Response>
 
 type ExistingShopRecord = {
   token_created_at: string | null;
+  token_updated_at: string | null;
+  deleted_at: string | null;
+  is_active: boolean | null;
+  access_token: string | null;
 };
 
 export async function fetchExistingShop(
   shopDomain: string,
 ): Promise<ExistingShopRecord | null> {
   const response = await supabaseFetch(
-    `/rest/v1/shops?select=token_created_at&shop_domain=eq.${encodeURIComponent(shopDomain)}&limit=1`,
+    `/rest/v1/shops?select=token_created_at,token_updated_at,deleted_at,is_active,access_token&shop_domain=eq.${encodeURIComponent(shopDomain)}&limit=1`,
     {
       method: "GET",
       headers: { Accept: "application/json" },
@@ -152,6 +156,21 @@ export async function saveShopInstallation({
   const existing = await fetchExistingShop(shopDomain);
   const nowIso = new Date().toISOString();
 
+  console.info("[supabase] saveShopInstallation start", {
+    shopDomain,
+    scopes,
+    hasExisting: Boolean(existing),
+    existingStatus: existing
+      ? {
+          is_active: existing.is_active,
+          hasToken: Boolean(existing.access_token),
+          tokenCreatedAt: existing.token_created_at,
+          tokenUpdatedAt: existing.token_updated_at,
+          deletedAt: existing.deleted_at,
+        }
+      : null,
+  });
+
   const baseRecord: Record<string, unknown> = {
     shop_domain: shopDomain,
     access_scopes: scopes,
@@ -172,6 +191,7 @@ export async function saveShopInstallation({
       headers: { Prefer: "return=minimal" },
       body: JSON.stringify(insertRecord),
     });
+    console.info("[supabase] saveShopInstallation inserted", { shopDomain });
     return;
   }
 
@@ -187,11 +207,32 @@ export async function saveShopInstallation({
       body: JSON.stringify(baseRecord),
     },
   );
+  console.info("[supabase] saveShopInstallation updated", { shopDomain });
 }
 
 export async function markShopAsUninstalled(shopDomain: string): Promise<void> {
   ensureSupabaseConfig();
   const nowIso = new Date().toISOString();
+
+  let existing: ExistingShopRecord | null = null;
+  try {
+    existing = await fetchExistingShop(shopDomain);
+  } catch (error) {
+    console.error("[supabase] markShopAsUninstalled fetch failed", error);
+  }
+
+  console.info("[supabase] markShopAsUninstalled start", {
+    shopDomain,
+    existingStatus: existing
+      ? {
+          is_active: existing.is_active,
+          hasToken: Boolean(existing.access_token),
+          tokenCreatedAt: existing.token_created_at,
+          tokenUpdatedAt: existing.token_updated_at,
+          deletedAt: existing.deleted_at,
+        }
+      : null,
+  });
 
   const updatePayload = {
     access_token: null,
@@ -209,4 +250,6 @@ export async function markShopAsUninstalled(shopDomain: string): Promise<void> {
       body: JSON.stringify(updatePayload),
     },
   );
+
+  console.info("[supabase] markShopAsUninstalled completed", { shopDomain });
 }
